@@ -6,7 +6,7 @@ os.environ['FREELINGSHARE'] = "C:\\Recursos\\FreeLing4\\data"
 
 def dep(phrase,oformat='json',parser='txala'):
     '''
-    ofor   : Output format. Values freeling, conll, json, xml
+    oformat: Output format. Values freeling, conll, json, xml
     parser : Algorithm. Values txala, treeler
     '''
     analyzer     = '%s\\..\\bin\\analyzer.bat'  % os.environ['FREELINGSHARE']
