@@ -58,14 +58,6 @@ def get_sol(tokens,hier=False):
     return pattern
 
 
-# def normalize(pat1,pat2):
-#     pat1,pat2 = pat1.split(" "), pat2.split(" ")
-#     for i in xrange()
-#     pat = re.sub("\[.*?\]\s+","", pat1)
-#     pat = re.sub("\*\s+","", pat2)
-#     return pat
-
-
 def match(text,psol):
     tsol = get_sol(text,hier=True)
     # Verifiar que las otologias sean las correctas
