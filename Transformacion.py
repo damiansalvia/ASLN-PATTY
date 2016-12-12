@@ -39,18 +39,19 @@ def get_sol(tokens,hier=False):
         toks.append(tok)
     
     pattern = ' '.join(toks) 
-    pattern = re.sub("(?:\*\s)+", "* ", pattern)        # Juntar multiples comodines
-    pattern = re.sub("(?:(\[adj\])\s)+", "\g<1> ", pattern)  # Juntar multiples opcionales iguales
-    pattern = re.sub("(?:(\[adv\])\s)+", "\g<1> ", pattern)  # Juntar multiples opcionales iguales
     
-    entities =  re.findall("\(\(\d:(.*?)\)\)",pattern)
+    # Reemplaazar entidades por ontologias
+    entities =  re.findall("\(\(\d+:(.*?)\)\)",pattern)
     for k in xrange(len(entities)):
         entity = entities[k]
         try:    pattern = re.sub("\(\(%i:(.*?)\)\)" % k, "<%s>" % '|'.join(QUERY[entity]), pattern)
         except: pattern = re.sub("\(\(%i:(.*?)\)\)" % k, "<Top>", pattern)
     
-    pattern = re.sub("(?:\[<.*?>\]\s)+", " ", pattern)  # Eliminar opcionales con entidaddes
-    pattern = re.sub("\s+", " ", pattern)               # Eliminar multiples espacios
+    pattern = re.sub("(?:\[<.*?>\]\s)+", " ", pattern)       # Eliminar opcionales con entidaddes
+    pattern = re.sub("\s+", " ", pattern)                    # Eliminar multiples espacios
+    pattern = re.sub("(?:(\[adj\])\s)+", "\g<1> ", pattern)  # Juntar multiples opcionales iguales
+    pattern = re.sub("(?:(\[adv\])\s)+", "\g<1> ", pattern)  # Juntar multiples opcionales iguales
+    pattern = re.sub("(?:\*\s)+", "* ", pattern)             # Juntar multiples comodines
     
     if not hier: # Quitar jerarquia completa 
         pattern = re.sub("<(.*?)\|.*?>","<\g<1>>",pattern)
@@ -133,17 +134,23 @@ if __name__ == '__main__':
     ]'''
     tjson = json.loads(fjson)
     pattern = "<Top> interpretó [adv] * <Top>"
-    for phrase in tjson:
-        print "FRASE   :",' '.join([item['word'] for item in phrase])
-        print "PATTERN :",get_sol(phrase)
-        print "MATCH1  :",match(phrase, "<Top> interpretó [adv] * <Top>")
-        print "MATCH2  :",match(phrase, "<Top> * interpretó [adv] * <Top>")
-        print "MATCH3  :",match(phrase, "<Top> interpretó [adv] <Top>")
-        print "MATCH4  :",match(phrase, "<Top> interpretó <Top>")
-        print "MATCH5  :",match(phrase, "<Top> [adv] interpretó <Top>")
-        print "MATCH6  :",match(phrase, "<Top> [adv] interpretó * <Top>")
-        print "MATCH7  :",match(phrase, "<Top> [adv] [adj] interpretó <Top>")
-        print "MATCH8  :",match(phrase, "<Top> [adv] [adj] interpretó * <Top>")
-        print
-        
+#     for phrase in tjson:
+#         print "FRASE   :",' '.join([item['word'] for item in phrase])
+#         print "PATTERN :",get_sol(phrase)
+#         print "MATCH1  :",match(phrase, "<Top> interpretó [adv] * <Top>")
+#         print "MATCH2  :",match(phrase, "<Top> * interpretó [adv] * <Top>")
+#         print "MATCH3  :",match(phrase, "<Top> interpretó [adv] <Top>")
+#         print "MATCH4  :",match(phrase, "<Top> interpretó <Top>")
+#         print "MATCH5  :",match(phrase, "<Top> [adv] interpretó <Top>")
+#         print "MATCH6  :",match(phrase, "<Top> [adv] interpretó * <Top>")
+#         print "MATCH7  :",match(phrase, "<Top> [adv] [adj] interpretó <Top>")
+#         print "MATCH8  :",match(phrase, "<Top> [adv] [adj] interpretó * <Top>")
+#         print
+    
+    with open('textual_patterns.json') as f:
+        print "FROM FILE"
+        fjson = json.loads(f.read())
+        for phrase in fjson:
+            print "FRASE   :",' '.join([item['word'] for item in phrase])
+            print "PATTERN :",get_sol(phrase)
         
