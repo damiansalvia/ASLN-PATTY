@@ -16,7 +16,7 @@ def preprocess(raws,top=200):
     texts = re.findall('<doc .*?>(.*?)</doc>', text, flags=re.S)
     return texts[:top] # It makes chunks for document
 
-def findPath(tree):
+def findPath(tree, match, tokens):
     '''
     Función recursiva para obtener el patron textual
     :param tree: árbol de dependencias devuelto por freeling
@@ -25,9 +25,9 @@ def findPath(tree):
 
     if complete(match):
         # Si se tiene las dos NE, se termina la ejecución.
-        return
+        return True
 
-    token = getToken(tree["token"])
+    token = getToken(tree["token"], tokens)
     match.append({
         # Se agrega un nuevo token.
         "word": token['form'],
@@ -37,16 +37,19 @@ def findPath(tree):
     })
 
     if token['ctag'] == "NP":
-        return
+        return True if complete(match) else False
 
+    comp = False
     if "children" in tree:
     # Se controla que existan hijos para el nodo.
         childrens = tree["children"]
         for child in childrens:
             # Se recore de izquierda a derecha recursivamente
-            findPath(child)
+            comp = findPath(child, match, tokens)
+            if comp:
+                break
 
-    return
+    return comp
 
 
 def extractID(token):
@@ -76,9 +79,9 @@ def complete(tokens):
     return False
 
 
-def getToken(id):
+def getToken(id, tokens):
     '''
-    Obtiene un token a partir del id del analisis Freeling
+    Obtiene un token correspondiente al id a partir del analisis Freeling
     :param id: String
     :return: Token
     '''
@@ -96,11 +99,26 @@ def patternToJson(pattern):
     return json.dumps(pattern)
 
 
+def execute(document):
+    patterns = []
+    doc = Freeling.dep(document)
+    doc = re.sub("}[\s\n\r]*{", "},{", doc)
+    lines = demjson.decode("[" + doc + "]")
+    for line in xrange(len(lines)):
+        tokens = lines[line]['tokens']
+        tree = lines[line]['dependencies'][0]
+        if not re.match("^V", getToken(tree["token"], tokens)["tag"]):
+            continue
+        match = []
+        findPath(tree, match, tokens)
+        if complete(match):
+            match.sort(key=lambda x: x["id"])
+            patterns.append(match)
+    return patterns
+
 #   MAIN
 if __name__ == '__main__':
-
-    dir = r"./WikiPOC"
-
+    dir = r"./WikiPOC-test"
     files = os.listdir(dir)
     N = len(files)
     patterns = []
@@ -109,18 +127,6 @@ if __name__ == '__main__':
         text = open(dir + "/" + file, 'r').read()
         docs = preprocess(text)
         for doc in docs:
-            document = Freeling.dep(doc)
-            document = re.sub("}[\s\n\r]*{", "},{", document)
-            lines = demjson.decode("[" + document + "]")
-            for line in xrange(len(lines)):
-                tokens = lines[line]['tokens']
-                tree = lines[line]['dependencies'][0]
-                if not re.match("^V", getToken(tree["token"])["tag"]):
-                    continue
-                match = []
-                findPath(tree)
-                if complete(match):
-                    match.sort(key=lambda x: x["id"])
-                    patterns.append(match)
+            patterns.extend(execute(doc))
     with open('textual_patterns.json', 'w') as outfile:
         json.dump(patterns, outfile)
