@@ -2,7 +2,7 @@
 import re
 import sys
 import json
-from Freeling import freeling
+import csv
 
 reload(sys)
 sys.setdefaultencoding('UTF8') 
@@ -147,10 +147,16 @@ if __name__ == '__main__':
 #         print "MATCH8  :",match(phrase, "<Top> [adv] [adj] interpretó * <Top>")
 #         print
     
-    with open('textual_patterns.json') as f:
+    with open('textual_patterns.json','r') as f:
+        wr = csv.writer(open('sol_patterns.csv','w'))    
         print "FROM FILE"
         fjson = json.loads(f.read())
         for phrase in fjson:
-            print "FRASE   :",' '.join([item['word'] for item in phrase])
-            print "PATTERN :",get_sol(phrase)
+            text = ' '.join([item['word'] for item in phrase])
+            print "FRASE   :",text
+            pattern = get_sol(phrase)
+            print "PATTERN :",pattern
+            wr.writerow([pattern,"%s'"%text])
+            
+            
         

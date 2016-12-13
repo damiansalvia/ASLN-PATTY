@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import FreeLing_Linux as Freeling
 import demjson
 import re
 import sys
 import json
 import os
+import platform
+
+if os.name == 'posix':
+    import FreeLing_Linux as Freeling
+else:
+    import Freeling
 
 reload(sys)
 sys.setdefaultencoding('UTF8')
@@ -108,7 +113,10 @@ if __name__ == '__main__':
         file = files[i]
         text = open(dir + "/" + file, 'r').read()
         docs = preprocess(text)
-        for doc in docs:
+        M = len(docs)
+        for j in xrange(M):
+            print "\r[%i/%i] Getting dependency tree - %i of %i docs" % (i+1,N,j+1,M),
+            doc = docs[j]
             document = Freeling.dep(doc)
             document = re.sub("}[\s\n\r]*{", "},{", document)
             lines = demjson.decode("[" + document + "]")
