@@ -15,18 +15,20 @@ KEY = "83dc4ab22d3e204e471ac1f702c8cedf" # Cuenta: Damian
 reload(sys)
 sys.setdefaultencoding('UTF8') 
 
-def preprocess(raws,i,N,top=20000):
+ACENTO = {"á":'a',"é":"e","í":"i","ó":"o","ú":"u","ü":"u","ñ":"n"}
+
+def preprocess(raws,i,N,top=10000):
     print "\r[%i/%i] Pre-processing                        " % (i+1,N),
     text  = re.sub('[\r\n\t]', '', raws, flags=re.S)
     text  = re.sub('ENDOFARTICLE.', '', text)
-    texts = re.findall('<doc .*?>(.*?)</doc>', text, flags=re.S) 
+    texts = re.findall('<doc .*?>(.*?)</doc>', text, flags=re.S)
     return texts[:top] # It makes chunks for document
 
 def nec(texts,i,N):
     ners,cant = defaultdict(),0
-    try:
-        M = len(texts)
-        for j in xrange(M):
+    M,j = len(texts),0
+    while j < xrange(M):
+        try:
             text = texts[j]
             while True:
                 # Obtener NER 
@@ -47,14 +49,16 @@ def nec(texts,i,N):
                 else: # Respuesta correcta
                     for entidad in data['entity_list']:
                         name      = entidad['form']
+                        for k, v in ACENTO.items():
+                            name = name.replace(k, v)   
                         hierarchy = entidad['sementity']['type'].split('>')
                         hierarchy.reverse()
                         ners[name] = hierarchy
                         print "\r[%i/%i] Analyzing chunk %i/%i (%i found)" % (i+1,N,j,M,cant), ; cant += 1
                     break
+        except KeyboardInterrupt:
+            if raw_input("Interrupt? [y/n]")=='y':break
 #             if j == 5: break # DEBUG
-    except KeyboardInterrupt:
-        if raw_input("Interrupt? [y/n]")=='y':sys.exit(0);
     return ners
 
 def execute(dir):
@@ -65,7 +69,10 @@ def execute(dir):
         file = files[i]
         text = open(dir+"/"+file,'r').read()
         docs = preprocess(text,i,N)
-        ners.update(nec(docs,i,N))
+        ner  = nec(docs,i,N)
+        ners.update(ner)
+        i += 1
+    print ners
     with open('dict.json', 'wb') as fjson:
         json.dump(ners,fjson)
 

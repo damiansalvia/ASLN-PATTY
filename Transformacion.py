@@ -52,6 +52,7 @@ def get_sol(tokens,hier=False):
     pattern = re.sub("(?:(\[adj\])\s)+", "\g<1> ", pattern)  # Juntar multiples opcionales iguales
     pattern = re.sub("(?:(\[adv\])\s)+", "\g<1> ", pattern)  # Juntar multiples opcionales iguales
     pattern = re.sub("(?:\*\s)+", "* ", pattern)             # Juntar multiples comodines
+    pattern = re.sub("^(?:\s|\*\s)+", "", pattern)              # Juntar multiples comodines al principio
     
     if not hier: # Quitar jerarquia completa 
         pattern = re.sub("<(.*?)\|.*?>","<\g<1>>",pattern)
@@ -152,7 +153,7 @@ if __name__ == '__main__':
         print "FROM FILE"
         fjson = json.loads(f.read())
         for phrase in fjson:
-            text = ' '.join([item['word'] for item in phrase])
+            text = ' '.join([item['word'].encode("utf8") for item in phrase])
             print "FRASE   :",text
             pattern = get_sol(phrase)
             print "PATTERN :",pattern
